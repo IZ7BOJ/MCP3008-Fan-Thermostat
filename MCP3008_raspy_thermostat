@@ -5,7 +5,8 @@
 # the script turns a fan on and off when temperature acquired by an external ADC MCP3008 
 # exceeds thresholds.
 #
-# the script was tested on a raspberry pi running kodi on osmc using a 3.3v GPIO
+# the script was tested on a raspberry pi equipped with MCP3008 ADC connected on SPI Interface
+# and using adafruit MCP3008 library
 #
 #########################
 
