@@ -30,26 +30,30 @@
 #
 #########################
 #
-# CONFIGURATION SECTION
-# NTC Value in Ohm
+# CONFIGURATION SECTION NTC Value in Ohm
 NTC=10000
 # NTC Beta constant. See on the datasheet, otherwise leave it unchanged
-Beta=3950
+beta=3950
 # Pull up resistor in Ohm (in series with the NTC, connected to Vcc)
 Rpullup=12000
 #
 # GPIO or BCM pin number to turn fan on and off
-pin = 25
+outpin = 25
 #
 # Time to sleep between checking the temperature
 sleepTime = 30
 # Log file path and name
-fileLog = open('/var/log/run-fan.log', 'w+', 0)
+logpath='/var/log/fan.log'
 #
 # switch-on threshold in degrees centigrade
 threshold=40
 # delta for switch off, referred to upper threshold
 delta = 5
+#
+# ADC3008 channel connectet to the NTC
+adcchannel=1
+# Temperature compensation, in degrees (if reading has an offset
+compensation= 6
 #########################
 import Adafruit_GPIO.SPI as SPI
 import Adafruit_MCP3008
@@ -61,12 +65,12 @@ import RPi.GPIO as GPIO
 import datetime
 import math
 #########################
-
+fileLog = open(logpath , 'w+', 0)
 #########################
 SPI_PORT   = 0
 SPI_DEVICE = 0
 mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
-
+########################
 # Log messages should be time stamped
 def timeStamp():
     t = time.time()
@@ -79,7 +83,7 @@ def printMsg(s):
 
 #########################
 class Pin(object):
-
+    pin=outpin
     def __init__(self):
         try:
             GPIO.setmode(GPIO.BCM)
@@ -133,9 +137,10 @@ class Temperature(object):
         printMsg("Stop fan at: " + str(self.stopTemperature))
 
     def getTemperature(self):
-        temp=mcp.read_adc(1)
-# Steinhart-Hart formula for NTC conversion. Beta=3950, NTC value=10K, pull-up resistor= 
-        temp_conv=1/(((1/beta)*math.log(Rpullup/(1024.00/temp-1)/NTC))+(1/298.15))-273.15+6
+        temp=mcp.read_adc(adcchannel)
+# Steinhart-Hart formula for NTC conversion. Beta=3950, NTC value=10K, pull-up resistor=
+        temp_conv=1/(((1/beta)*math.log(Rpullup/(1024/512-1)/NTC))+(1/298.15))-273.15+compensation
+#       temp_conv=27.0
         self.Temperature=temp_conv
         printMsg("Current Temperature:" +str(temp_conv))
 # Using the acquired temperature, turn the fan on or off
@@ -169,4 +174,5 @@ except KeyboardInterrupt: # trap a CTRL+C keyboard interrupt
 except:
     printMsg("ERROR: an unhandled exception occurred")
     myPin.exitPin()
-    fileLog.close()
+fileLog.close()
+
