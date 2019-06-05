@@ -29,7 +29,27 @@
 # Source: https://github.com/dumbo25/rpi-fan/blob/master/run-fan.py
 #
 #########################
-
+#
+# CONFIGURATION SECTION
+# NTC Value in Ohm
+NTC=10000
+# NTC Beta constant. See on the datasheet, otherwise leave it unchanged
+Beta=3950
+# Pull up resistor in Ohm (in series with the NTC, connected to Vcc)
+Rpullup=12000
+#
+# GPIO or BCM pin number to turn fan on and off
+pin = 25
+#
+# Time to sleep between checking the temperature
+sleepTime = 30
+# Log file path and name
+fileLog = open('/var/log/run-fan.log', 'w+', 0)
+#
+# switch-on threshold in degrees centigrade
+threshold=40
+# delta for switch off, referred to upper threshold
+delta = 5
 #########################
 import Adafruit_GPIO.SPI as SPI
 import Adafruit_MCP3008
@@ -41,9 +61,6 @@ import RPi.GPIO as GPIO
 import datetime
 import math
 #########################
-sleepTime = 30   # Time to sleep between checking the temperature
-                # want to write unbuffered to file
-fileLog = open('/var/log/run-fan.log', 'w+', 0)
 
 #########################
 SPI_PORT   = 0
@@ -62,7 +79,6 @@ def printMsg(s):
 
 #########################
 class Pin(object):
-    pin = 25        # GPIO or BCM pin number to turn fan on and off
 
     def __init__(self):
         try:
@@ -108,10 +124,10 @@ class Temperature(object):
     def __init__(self):
 
         # Start temperature in Celsius
-        self.startTemperature = 40.0
+        self.startTemperature = threshold
 
         # Wait until the temperature is M degrees under the Max before shutting off
-        self.stopTemperature = self.startTemperature - 5.0
+        self.stopTemperature = self.startTemperature - delta
 
         printMsg("Start fan at: " + str(self.startTemperature))
         printMsg("Stop fan at: " + str(self.stopTemperature))
@@ -119,7 +135,7 @@ class Temperature(object):
     def getTemperature(self):
         temp=mcp.read_adc(1)
 # Steinhart-Hart formula for NTC conversion. Beta=3950, NTC value=10K, pull-up resistor= 
-        temp_conv=1.00/(((1/3950.00)*math.log(12000.00/(1024.00/temp-1)/10000.00))+(1/298.15))-273.15+6
+        temp_conv=1/(((1/beta)*math.log(Rpullup/(1024.00/temp-1)/NTC))+(1/298.15))-273.15+6
         self.Temperature=temp_conv
         printMsg("Current Temperature:" +str(temp_conv))
 # Using the acquired temperature, turn the fan on or off
