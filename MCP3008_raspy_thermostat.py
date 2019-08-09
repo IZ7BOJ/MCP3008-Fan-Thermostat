@@ -50,7 +50,7 @@ threshold=50
 delta = 5
 # ADC3008 channel connectet to the NTC
 adcchannel=1
-# Temperature compensation, in degrees (if reading has an offset
+# Temperature compensation, in degrees (if reading has an offset)
 compensation= 6
 #########################
 import Adafruit_GPIO.SPI as SPI
@@ -118,7 +118,7 @@ class Fan(object):
         else:
             if debug:
                 printMsg("Turning fan off : {0:.2f}" .format(temp))
-            myPin.set(off)
+            myPin.set(on)
             self.fanOff = on
 
 # Temperature class
