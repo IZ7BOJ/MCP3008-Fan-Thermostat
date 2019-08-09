@@ -42,9 +42,12 @@ outpin = 25
 #
 # Time to sleep between checking the temperature
 sleepTime = 30
+#
 # Log file path and name
 logpath='/var/log/fan.log'
 #
+# Log enable
+debug=1
 # switch-on threshold in degrees centigrade
 threshold=40
 # delta for switch off, referred to upper threshold
@@ -89,9 +92,11 @@ class Pin(object):
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(self.pin, GPIO.OUT)
             GPIO.setwarnings(False)
-            printMsg("Initialized: run-fan using GPIO pin: " + str(self.pin))
+            if debug:
+                printMsg("Initialized: run-fan using GPIO pin: " + str(self.pin))
         except:
-            printMsg("If method setup doesn't work, need to run script as sudo")
+            if debug:
+                printMsg("If method setup doesn't work, need to run script as sudo")
             exit
 
     # resets all GPIO ports used by this program
@@ -111,11 +116,13 @@ class Fan(object):
     # Turn the fan on or off
     def setFan(self, temp, on, myPin):
         if on:
-            printMsg("Turning fan on " + str(temp))
+            if debug:
+                printMsg("Turning fan on " + str(temp))
             myPin.set(on)
             self.fanOff = not on
         else:
-            printMsg("Turning fan off " + str(temp))
+            if debug:
+                printMsg("Turning fan off " + str(temp))
             myPin.set(off)
             self.fanOff = on
 
@@ -132,9 +139,9 @@ class Temperature(object):
 
         # Wait until the temperature is M degrees under the Max before shutting off
         self.stopTemperature = self.startTemperature - delta
-
-        printMsg("Start fan at: " + str(self.startTemperature))
-        printMsg("Stop fan at: " + str(self.stopTemperature))
+        if debug:
+            printMsg("Start fan at: " + str(self.startTemperature))
+            printMsg("Stop fan at: " + str(self.stopTemperature))
 
     def getTemperature(self):
         temp=mcp.read_adc(adcchannel)
@@ -142,7 +149,8 @@ class Temperature(object):
         temp_conv=1/(((1/beta)*math.log(Rpullup/(1024/512-1)/NTC))+(1/298.15))-273.15+compensation
 #       temp_conv=27.0
         self.Temperature=temp_conv
-        printMsg("Current Temperature:" +str(temp_conv))
+        if debug:
+            printMsg("Current Temperature:" +str(temp_conv))
 # Using the acquired temperature, turn the fan on or off
     def checkTemperature(self, myFan, myPin):
         self.getTemperature()
@@ -155,7 +163,8 @@ class Temperature(object):
             if not myFan.fanOff:
                 myFan.setFan(self.Temperature, False, myPin)
 
-printMsg("Starting thermostat")
+if debug:
+    printMsg("Starting thermostat")
 try:
     myPin = Pin()
     myFan = Fan()
@@ -167,12 +176,14 @@ try:
         time.sleep(sleepTime)
 
 except KeyboardInterrupt: # trap a CTRL+C keyboard interrupt
-    printMsg("keyboard exception occurred")
+    if debug:
+        printMsg("keyboard exception occurred")
     myPin.exitPin()
     fileLog.close()
 
 except:
-    printMsg("ERROR: an unhandled exception occurred")
+    if debug:
+        printMsg("ERROR: an unhandled exception occurred")
     myPin.exitPin()
 fileLog.close()
 
