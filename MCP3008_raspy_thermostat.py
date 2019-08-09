@@ -2,7 +2,7 @@
 
 #########################
 #
-# the script turns a fan on and off when temperature acquired by an external ADC MCP3008 
+# the script turns a fan on and off when temperature acquired by an external ADC MCP3008
 # exceeds thresholds.
 #
 # the script was tested on a raspberry pi equipped with MCP3008 ADC connected on SPI Interface
@@ -36,23 +36,18 @@ NTC=10000
 beta=3950
 # Pull up resistor in Ohm (in series with the NTC, connected to Vcc)
 Rpullup=12000
-#
 # GPIO or BCM pin number to turn fan on and off
 outpin = 25
-#
 # Time to sleep between checking the temperature
 sleepTime = 30
-#
 # Log file path and name
 logpath='/var/log/fan.log'
-#
 # Log enable
 debug=1
 # switch-on threshold in degrees centigrade
-threshold=40
+threshold=50
 # delta for switch off, referred to upper threshold
 delta = 5
-#
 # ADC3008 channel connectet to the NTC
 adcchannel=1
 # Temperature compensation, in degrees (if reading has an offset
@@ -68,7 +63,7 @@ import RPi.GPIO as GPIO
 import datetime
 import math
 #########################
-fileLog = open(logpath , 'w+', 0)
+fileLog = open(logpath , 'a+', 0)
 #########################
 SPI_PORT   = 0
 SPI_DEVICE = 0
@@ -117,12 +112,12 @@ class Fan(object):
     def setFan(self, temp, on, myPin):
         if on:
             if debug:
-                printMsg("Turning fan on " + str(temp))
+                printMsg("Turning fan on : {0:.2f}" .format(temp))
             myPin.set(on)
             self.fanOff = not on
         else:
             if debug:
-                printMsg("Turning fan off " + str(temp))
+                printMsg("Turning fan off : {0:.2f}" .format(temp))
             myPin.set(off)
             self.fanOff = on
 
@@ -145,12 +140,11 @@ class Temperature(object):
 
     def getTemperature(self):
         temp=mcp.read_adc(adcchannel)
-# Steinhart-Hart formula for NTC conversion. Beta=3950, NTC value=10K, pull-up resistor=
-        temp_conv=1/(((1/beta)*math.log(Rpullup/(1024/512-1)/NTC))+(1/298.15))-273.15+compensation
-#       temp_conv=27.0
+#Steinhart-Hart formula for NTC conversion. Beta=3950, NTC value=10K, pull-up resistor=
+        temp_conv=1/(((1/float(beta))*math.log(Rpullup/(float(1024)/temp-1)/NTC))+(1/298.15))-273.15+compensation
         self.Temperature=temp_conv
-        if debug:
-            printMsg("Current Temperature:" +str(temp_conv))
+#        if debug:
+#            printMsg("temp is {0:.2f}".format(temp_conv))
 # Using the acquired temperature, turn the fan on or off
     def checkTemperature(self, myFan, myPin):
         self.getTemperature()
@@ -186,4 +180,3 @@ except:
         printMsg("ERROR: an unhandled exception occurred")
     myPin.exitPin()
 fileLog.close()
-
