@@ -2,7 +2,7 @@
 
 #########################
 #
-# the script turns a fan on and off when temperature acquired by an external ADC MCP3008
+# the script turns a fan on and off when temperature acquired by an external ADC MCP3008 
 # exceeds thresholds.
 #
 # the script was tested on a raspberry pi equipped with MCP3008 ADC connected on SPI Interface
@@ -39,18 +39,18 @@ Rpullup=12000
 # GPIO or BCM pin number to turn fan on and off
 outpin = 25
 # Time to sleep between checking the temperature
-sleepTime = 30
+sleepTime = 60
 # Log file path and name
 logpath='/var/log/fan.log'
 # Log enable
 debug=1
 # switch-on threshold in degrees centigrade
-threshold=50
+threshold=45
 # delta for switch off, referred to upper threshold
 delta = 5
 # ADC3008 channel connectet to the NTC
 adcchannel=1
-# Temperature compensation, in degrees (if reading has an offset)
+# Temperature compensation, in degrees (if reading has an offset
 compensation= 6
 #########################
 import Adafruit_GPIO.SPI as SPI
@@ -63,7 +63,7 @@ import RPi.GPIO as GPIO
 import datetime
 import math
 #########################
-fileLog = open(logpath , 'a+', 0)
+fileLog = open(logpath , 'a+', 0) #append new log to existing one
 #########################
 SPI_PORT   = 0
 SPI_DEVICE = 0
@@ -79,13 +79,14 @@ def timeStamp():
 def printMsg(s):
     fileLog.write(timeStamp() + s + "\n")
 
-#########################
+# Pin class
 class Pin(object):
     pin=outpin
     def __init__(self):
         try:
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(self.pin, GPIO.OUT)
+			GPIO.output(self.pin,False) #pin normally goes high if set as output
             GPIO.setwarnings(False)
             if debug:
                 printMsg("Initialized: run-fan using GPIO pin: " + str(self.pin))
@@ -114,12 +115,12 @@ class Fan(object):
             if debug:
                 printMsg("Turning fan on : {0:.2f}" .format(temp))
             myPin.set(on)
-            self.fanOff = not on
+            self.fanOff = False
         else:
             if debug:
                 printMsg("Turning fan off : {0:.2f}" .format(temp))
             myPin.set(on)
-            self.fanOff = on
+            self.fanOff = True
 
 # Temperature class
 class Temperature(object):
@@ -144,7 +145,7 @@ class Temperature(object):
         temp_conv=1/(((1/float(beta))*math.log(Rpullup/(float(1024)/temp-1)/NTC))+(1/298.15))-273.15+compensation
         self.Temperature=temp_conv
 #        if debug:
-#            printMsg("temp is {0:.2f}".format(temp_conv))
+#	     printMsg("temp is {0:.2f}".format(temp_conv))
 # Using the acquired temperature, turn the fan on or off
     def checkTemperature(self, myFan, myPin):
         self.getTemperature()
