@@ -19,36 +19,65 @@ Source: https://github.com/dumbo25/rpi-fan/blob/master/run-fan.py
 
 You can start automatically the script using systemd
 
+
 Create a systemd service file using:
+
 $ sudo nano /lib/systemd/system/run-fan.service
    
+
 with the contents as shown below (remove # and leading spaces):
+
+
 [Unit]
+
 Description=run fan when hot
+
 After=meadiacenter.service
 
+
+
 [Service]
+
 User=root
 Group=root
+
 Type=simple
+
 ExecStart=/usr/bin/python /home/pi/run-fan.py #Insert real path of the script!!
+
 Restart=Always
 
+
+
 [Install]
+
 WantedBy=multi-user.target
+
+
 
 ctrl-o, ENTER, ctrl-x to save and exit the nano editor
 
+
 After any changes to /lib/systemd/system/run-fan.service:
+
 sudo systemctl daemon-reload
+
 sudo systemctl enable run-fan.service
+
 sudo reboot
 
-Ensure the run-fan.service in systemd is enabled and running:
+Ensure the run-fan.service 
+in systemd is enabled and running:
+
 systemctl list-unit-files | grep enabled
+
 systemctl | grep running | grep fan
+
 systemctl status run-fan.service -l
+
+
 
 If there are any issues with starting the script using systemd, 
 then examine the journal using:
+
 sudo journalctl -u run-fan.service
